@@ -11,68 +11,64 @@ import (
 	"strings"
 )
 
-type User struct {
+type user struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
+	FullName string `json:"full_name"`
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Только POST-запросы
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		http.Error(w, "Неверный метод запроса", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var user User
+	var user user
 
 	// Декодируем JSON тело запроса
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, "Неверное тело запроса", http.StatusBadRequest)
 		return
 	}
 
 	// Простая валидация входных данных
-	if strings.TrimSpace(user.Login) == "" || strings.TrimSpace(user.Password) == "" || strings.TrimSpace(user.Email) == "" {
-		http.Error(w, "Login, password and email are required", http.StatusBadRequest)
+	if strings.TrimSpace(user.Login) == "" || strings.TrimSpace(user.Password) == "" || strings.TrimSpace(user.Email) == "" || strings.TrimSpace(user.FullName) == "" {
+		http.Error(w, "Логин, пароль, email и имя обязательны", http.StatusBadRequest)
 		return
 	}
 
 	// Здесь можно добавить дополнительные проверки (например, проверка на уникальность логина или email)
 
 	// Хешируем пароль перед сохранением в базу данных (рекомендуется использовать более безопасные хеш-функции, например bcrypt)
-	hashedPassword, err := util.HashPassword(user.Password)
+	user.Password, err = util.HashPassword(user.Password)
 	if err != nil {
-		http.Error(w, "Error saving user to database", http.StatusInternalServerError)
+		http.Error(w, "Ошибка при хешировании пароля", http.StatusInternalServerError)
 		return
 	}
 
 	// Добавляем пользователя в базу данных
-	err = saveUserToDB(user.Login, hashedPassword, user.Email)
+	err = saveUserToDB(user)
 	if err != nil {
-		
-		http.Error(w, "Error saving user to database", http.StatusInternalServerError)
+		http.Error(w, "Такой пользователь уже существует", http.StatusConflict)
 		return
 	}
 
 	// Отправляем успешный ответ
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "User %s successfully registered!", user.Login)
-}
-
-// Функция для хеширования пароля (реализована просто для примера, рекомендуется использовать bcrypt)
-func hashPassword(password string) string {
-	return password // Здесь нужно заменить на реальную функцию хеширования, например bcrypt
+	fmt.Fprintf(w, "Пользователь %s успешно зарегистрирован!", user.Login)
 }
 
 // Функция для сохранения пользователя в базе данных
-func saveUserToDB(login, password, email string) error {
+func saveUserToDB(user user) error {
 	// Пример запроса для вставки пользователя
-	query := `INSERT INTO users (login, password, email) VALUES ($1, $2, $3)`
-	_, err := database.DB.Exec(context.Background(), query, login, password, email)
+	query := `INSERT INTO users (login, password, email, full_name) VALUES ($1, $2, $3, $4)`
+	_, err := database.DB.Exec(context.Background(), query, user.Login, user.Password, user.Email, user.FullName)
 	if err != nil {
-		log.Println("Error inserting user into database:", err)
+		// Логируем ошибку на русском
+		log.Println("Ошибка при вставке пользователя в базу данных:", err)
 		return err
 	}
 

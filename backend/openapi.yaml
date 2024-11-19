@@ -1,0 +1,329 @@
+openapi: 3.0.0
+info:
+  title: User Authentication and Friendship API
+  description: API для регистрации, авторизации пользователей, работы с друзьями и профилями.
+  version: 1.0.0
+paths:
+  /api/auth:
+    post:
+      summary: Авторизация пользователя
+      description: Получение JWT токена для пользователя после успешной авторизации.
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: Логин пользователя
+                  example: johndoe
+                password:
+                  type: string
+                  description: Пароль пользователя
+                  example: strongpassword123
+              required:
+                - login
+                - password
+      responses:
+        '200':
+          description: Успешная авторизация и получение JWT токена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT токен
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTYwZGZmOGZkYzExN2VhZTk1ZmFkZGRmIn0.X7uVtQXyqf1klUj5g8GiZ0gPoqhA8Aq2z56TbrnI7-s"
+        '400':
+          description: Неверное тело запроса
+        '401':
+          description: Неверный логин или пароль
+        '500':
+          description: Ошибка сервера
+  /api/register:
+    post:
+      summary: Регистрация пользователя
+      description: Регистрирует нового пользователя в системе, принимая логин, пароль, email и полное имя.
+      operationId: register
+      tags:
+        - Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                login:
+                  type: string
+                  description: Логин пользователя
+                  example: johndoe
+                password:
+                  type: string
+                  description: Пароль пользователя
+                  example: strongpassword123
+                email:
+                  type: string
+                  description: Email пользователя
+                  example: johndoe@example.com
+                full_name:
+                  type: string
+                  description: Полное имя пользователя
+                  example: John Doe
+              required:
+                - login
+                - password
+                - email
+                - full_name
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Пользователь johndoe успешно зарегистрирован!"
+        '400':
+          description: Неверное тело запроса
+        '409':
+          description: Такой пользователь уже существует
+        '500':
+          description: Ошибка при хешировании пароля или добавлении в базу данных
+  /api/profile:
+    get:
+      summary: Получить профиль текущего пользователя
+      description: Возвращает профиль пользователя, извлекаемый из контекста JWT токена.
+      operationId: getProfile
+      tags:
+        - Profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  uuid:
+                    type: string
+                    description: UUID пользователя
+                    example: "12345"
+                  login:
+                    type: string
+                    description: Логин пользователя
+                    example: johndoe
+                  email:
+                    type: string
+                    description: Email пользователя
+                    example: johndoe@example.com
+                  full_name:
+                    type: string
+                    description: Полное имя пользователя
+                    example: John Doe
+        '401':
+          description: Токен не предоставлен или неверный
+  /api/friends/request:
+    post:
+      summary: Отправить запрос на добавление в друзья
+      description: Отправляет запрос на добавление в друзья указанному пользователю.
+      operationId: sendFriendRequest
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: friend_login
+          in: query
+          description: Логин друга
+          required: true
+          schema:
+            type: string
+            example: janedoe
+      responses:
+        '200':
+          description: Запрос на добавление в друзья успешно отправлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Запрос на добавление в друзья успешно отправлен"
+        '400':
+          description: Логин друга обязателен
+        '404':
+          description: Друг не найден
+  /api/friends/accept:
+    post:
+      summary: Принять запрос на добавление в друзья
+      description: Принять запрос на добавление в друзья от другого пользователя.
+      operationId: acceptFriendRequest
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: friend_login
+          in: query
+          description: Логин друга
+          required: true
+          schema:
+            type: string
+            example: janedoe
+      responses:
+        '200':
+          description: Запрос на добавление в друзья принят
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Запрос на добавление в друзья принят"
+        '400':
+          description: Логин друга обязателен
+        '404':
+          description: Друг не найден
+  /api/friends/decline:
+    post:
+      summary: Отклонить запрос на добавление в друзья
+      description: Отклонить запрос на добавление в друзья от другого пользователя.
+      operationId: declineFriendRequest
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: friend_login
+          in: query
+          description: Логин друга
+          required: true
+          schema:
+            type: string
+            example: janedoe
+      responses:
+        '200':
+          description: Запрос на добавление в друзья отклонен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Запрос на добавление в друзья отклонен"
+        '400':
+          description: Логин друга обязателен
+        '404':
+          description: Друг не найден
+  /api/friends/remove:
+    post:
+      summary: Удалить друга
+      description: Удаляет друга из списка друзей.
+      operationId: removeFriend
+      tags:
+        - Friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: friend_login
+          in: query
+          description: Логин друга
+          required: true
+          schema:
+            type: string
+            example: janedoe
+      responses:
+        '200':
+          description: Друг успешно удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Друг успешно удален"
+        '400':
+          description: Логин друга обязателен
+        '404':
+          description: Друг не найден
+  /api/search:
+    get:
+      summary: Поиск пользователей
+      description: Ищет пользователей по логину или полному имени с пагинацией.
+      operationId: searchUser
+      tags:
+        - Users
+      parameters:
+        - name: query
+          in: query
+          description: Запрос для поиска (логин или имя)
+          required: true
+          schema:
+            type: string
+            example: johndoe
+        - name: page
+          in: query
+          description: Номер страницы (по умолчанию 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Количество результатов на странице (по умолчанию 10)
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Результаты поиска пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    uuid:
+                      type: string
+                      description: UUID пользователя
+                      example: "12345"
+                    login:
+                      type: string
+                      description: Логин пользователя
+                      example: johndoe
+                    full_name:
+                      type: string
+                      description: Полное имя пользователя
+                      example: John Doe
+                    email:
+                      type: string
+                      description: Email пользователя
+                      example: johndoe@example.com
+        '400':
+          description: Параметр 'query' обязателен
+        '500':
+          description: Ошибка сервера
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
