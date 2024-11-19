@@ -1,0 +1,30 @@
+curl -X POST http://localhost:8000/api/register \
+    -H "Content-Type: application/json" \
+    -d '{"login": "dannamer", "password": "password123", "email": "dannamer@example.com", "full_name": "абоба"}'
+
+curl -X POST http://localhost:8000/api/auth \
+  -H "Content-Type: application/json" \
+  -d '{"login": "newuser", "password": "password123"}'
+
+curl -X GET http://localhost:8000/api/profile \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMTYxNzUsInV1aWQiOiIzMTNiMWQxMS05NWY1LTQ5NWEtYjU3MC1mMzg2ODExZGY4MWQifQ.EgB3JCbyVb5V_H6roWCoXDbxaj0ebogVSH-TwAJm9ww"
+
+curl -X POST "http://localhost:8000/api/friends/request?friend_login=dannamer" \
+     -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMTYxNzUsInV1aWQiOiIzMTNiMWQxMS05NWY1LTQ5NWEtYjU3MC1mMzg2ODExZGY4MWQifQ.EgB3JCbyVb5V_H6roWCoXDbxaj0ebogVSH-TwAJm9ww"
+
+curl -X POST http://localhost:8000/api/friends/accept?friend_login=dannamer \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMTYxNzUsInV1aWQiOiIzMTNiMWQxMS05NWY1LTQ5NWEtYjU3MC1mMzg2ODExZGY4MWQifQ.EgB3JCbyVb5V_H6roWCoXDbxaj0ebogVSH-TwAJm9ww"
+
+  curl -X POST http://localhost:8000/api/auth \
+  -H "Content-Type: application/json" \
+  -d '{"login": "dannamer", "password": "password123"}'
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMjUwMTIsInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.QrTaC9z2tM8Ud8vkkMCjZGdA4pNed9R_BHc-yIHOcRU
+
+curl -X POST http://localhost:8000/api/friends/request?friend_login=newuser \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMjUwMTIsInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.QrTaC9z2tM8Ud8vkkMCjZGdA4pNed9R_BHc-yIHOcRU"
+
+curl -X POST "http://localhost:8000/api/friends/remove?friend_login=newuser" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMjUwMTIsInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.QrTaC9z2tM8Ud8vkkMCjZGdA4pNed9R_BHc-yIHOcRU"
+
+curl -X POST http://localhost:8000/api/friends/decline?friend_login=newuser \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwMjUwMTIsInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.QrTaC9z2tM8Ud8vkkMCjZGdA4pNed9R_BHc-yIHOcRU"
