@@ -7,13 +7,17 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "generate-client": "openapi-ts --input http://localhost:8000/api/openapi.yaml --output ./client --client axios"
   },
   "dependencies": {
+    "@hey-api/client-axios": "^0.2.10",
     "@mdi/font": "^7.4.47",
     "@nuxt/ui-pro": "^1.5.0",
     "@nuxtjs/tailwindcss": "^6.12.2",
     "@primevue/themes": "^4.2.2",
+    "axios": "^1.7.7",
+    "generate-client": "^1.6.0",
     "nuxt": "^3.14.159",
     "nuxt-primevue": "^3.0.0",
     "nuxtjs-naive-ui": "^1.0.2",
@@ -26,6 +30,7 @@
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "devDependencies": {
+    "@hey-api/openapi-ts": "^0.56.1",
     "@primevue/nuxt-module": "^4.2.2",
     "vite-plugin-vuetify": "^2.0.4",
     "vuetify": "^3.7.4"
