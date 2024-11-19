@@ -31,7 +31,11 @@ func RegisterRoutes() {
 
 	// http.Handle("/api/users/search", middleware.TokenAuthMiddleware(http.HandlerFunc(profile.SearchUserHandler)))
 	http.HandleFunc("/api/search", profile.SearchUserHandler)
-
+	// Добавляем обработчик для /docs для отдачи OpenAPI спецификации
+	http.HandleFunc("/api/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		// Отдаём файл openapi.yaml или openapi.json
+		http.ServeFile(w, r, "./openapi.yaml") // Убедитесь, что файл существует по этому пути
+	})
 	log.Println("Server started on :8000...")
 
 	// Запуск сервера
@@ -39,4 +43,5 @@ func RegisterRoutes() {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
+
 // /api/users/search
