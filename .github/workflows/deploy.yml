@@ -20,13 +20,24 @@ jobs:
         run: |
           docker build -t my-backend-image ./backend
 
+      - name: Save Docker image as tar
+        run: |
+          docker save my-backend-image -o my-backend-image.tar
+
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Deploy to server
+      - name: Transfer Docker image to server
         env:
           SSH_PASSWORD: h_LUKW+.hieF9-
         run: |
-          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no root@5.23.53.194 "docker stop my-backend-container || true && \
+          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no my-backend-image.tar root@5.23.53.194:/tmp/
+
+      - name: Deploy to server
+        env:
+          SSH_PASSWORD: h_LUKW+.hieF9- 
+        run: |
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no root@5.23.53.194 "docker load -i /tmp/my-backend-image.tar && \
+          docker stop my-backend-container || true && \
           docker rm my-backend-container || true && \
           docker run -d -p 8000:8000 --name my-backend-container my-backend-image"
