@@ -1,0 +1,43 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main  # Укажите нужную ветку
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-backend-image ./backend
+
+      - name: Save Docker image as tar
+        run: |
+          docker save my-backend-image -o my-backend-image.tar
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Transfer Docker image to server
+        env:
+          SSH_PASSWORD: h_LUKW+.hieF9-
+        run: |
+          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no my-backend-image.tar root@5.23.53.194:/tmp/
+
+      - name: Deploy to server
+        env:
+          SSH_PASSWORD: h_LUKW+.hieF9- 
+        run: |
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no root@5.23.53.194 "docker load -i /tmp/my-backend-image.tar && \
+          docker stop my-backend-container || true && \
+          docker rm my-backend-container || true && \
+          docker run -d -p 8000:8000 --name my-backend-container my-backend-image"

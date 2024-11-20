@@ -1,9 +1,0 @@
-{
-  "name": "hantaton.test",
-  "version": "0.0.0",
-  "description": "Тестовый проект к хантатону",
-  "main": "main.js",
-  "repository": "https://github.com/Azreil-OFD/ec-test-hantanon.git",
-  "author": "Azreil-OFD <68663142+Azreil-OFD@users.noreply.github.com>",
-  "license": "MIT"
-}

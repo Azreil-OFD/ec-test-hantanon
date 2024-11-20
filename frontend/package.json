@@ -1,0 +1,30 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "predeploy": "nuxt generate",
+    "deploy": "gh-pages -d dist",
+    "client": "npx @hey-api/openapi-ts -i ../backend/openapi.yaml -o ./client -c @hey-api/client-fetch"
+  },
+  "dependencies": {
+    "@hey-api/client-fetch": "^0.4.4",
+    "@primevue/themes": "^4.2.2",
+    "nuxt": "^3.14.159",
+    "primevue": "^4.2.2",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "devDependencies": {
+    "@primevue/nuxt-module": "^4.2.2",
+    "autoprefixer": "^10.4.20",
+    "gh-pages": "^6.2.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15"
+  }
+}
