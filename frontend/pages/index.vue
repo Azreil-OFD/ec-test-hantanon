@@ -2,11 +2,10 @@
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <h1 class="text-3xl font-bold mb-6">Необходима регистрация</h1>
         <p class="text-lg mb-4">Чтобы продолжить, вам необходимо зарегистрироваться.</p>
-        <router-link to="/auth">
-            <button class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+        <NuxtLink to="/auth"><button class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
                 Перейти к регистрации
-            </button>
-        </router-link>
+            </button></NuxtLink>
+
     </div>
 </template>
 
