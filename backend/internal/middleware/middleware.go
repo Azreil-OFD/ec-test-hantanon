@@ -52,10 +52,17 @@ func TokenAuthMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// NoCORSMiddleware отключает CORS
 func NoCORSHandler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Не добавляем никаких CORS заголовков
-		next.ServeHTTP(w, r)
-	})
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        w.Header().Set("Access-Control-Allow-Origin", "*") // Разрешаем все домены
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        
+        // Обработка preflight запросов (OPTIONS)
+        if r.Method == "OPTIONS" {
+            return
+        }
+        
+        next.ServeHTTP(w, r)
+    })
 }
