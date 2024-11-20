@@ -17,7 +17,18 @@ type user struct {
 	Password string `json:"password"` // Пароль пользователя
 }
 
-// Функция для обработки запроса авторизации
+// LoginHandler godoc
+// @Summary Авторизация пользователя
+// @Description Проверяет логин и пароль пользователя, генерирует JWT токен при успешной авторизации.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param login body user true "Данные для авторизации" 
+// @Success 200 {object} map[string]string {"token": "JWT токен"}
+// @Failure 400 {string} string "Неверное тело запроса"
+// @Failure 401 {string} string "Неверный логин или пароль"
+// @Failure 500 {string} string "Ошибка генерации токена"
+// @Router /api/auth [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Получаем данные из тела запроса (login и password)
 	var user user

@@ -12,7 +12,14 @@ type contextKey string
 
 const UserUUIDKey contextKey = "userUUID"
 
-// Middleware для проверки JWT токена и извлечения UUID
+// TokenAuthMiddleware godoc
+// @Summary Проверка JWT токена
+// @Description Проверка JWT токена в заголовках запроса. Токен должен быть передан в формате `Bearer <token>`.
+// @Tags Middleware
+// @Accept json
+// @Produce json
+// @Failure 401 {string} string "Токен не предоставлен или неверный токен"
+// @Router /api/* [all]
 func TokenAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Получаем JWT токен из заголовков запроса
@@ -42,5 +49,13 @@ func TokenAuthMiddleware(next http.Handler) http.Handler {
 
 		// Передаем управление следующему обработчику с обновленным контекстом
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// NoCORSMiddleware отключает CORS
+func NoCORSHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Не добавляем никаких CORS заголовков
+		next.ServeHTTP(w, r)
 	})
 }

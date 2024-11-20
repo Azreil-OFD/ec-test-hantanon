@@ -17,7 +17,18 @@ type user struct {
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 }
-
+// RegisterHandler godoc
+// @Summary Регистрация нового пользователя
+// @Description Регистрация нового пользователя в системе. Требует передачи логина, пароля, email и имени.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body user true "Данные пользователя для регистрации"
+// @Success 201 {string} string "Пользователь успешно зарегистрирован"
+// @Failure 400 {string} string "Неверное тело запроса или отсутствуют обязательные поля"
+// @Failure 409 {string} string "Пользователь с таким логином или email уже существует"
+// @Failure 500 {string} string "Ошибка при хешировании пароля или сохранении пользователя"
+// @Router /api/register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Только POST-запросы
 	if r.Method != http.MethodPost {

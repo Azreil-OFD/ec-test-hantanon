@@ -10,7 +10,19 @@ import (
 	"net/http"
 )
 
-// GetFriendsInfoHandler - универсальная ручка для получения информации о друзьях и заявках
+// GetFriendsInfoHandler godoc
+// @Summary Получение информации о друзьях
+// @Description Возвращает информацию о друзьях, входящих и исходящих заявках на добавление в друзья пользователя. 
+// Если параметр 'type' не передан, возвращает все данные (друзья, входящие и исходящие заявки). 
+// Если параметр 'type' передан, возвращает только соответствующий список ('friends', 'incoming', или 'outgoing').
+// @Tags Friends
+// @Accept json
+// @Produce json
+// @Param type query string false "Тип данных для возврата. Возможные значения: 'friends', 'incoming', 'outgoing'"  // Параметр типа
+// @Success 200 {object} map[string][]UserProfile "Успешный ответ с данными друзей, заявок и т. д."
+// @Failure 400 {string} string "Некорректный параметр 'type'"
+// @Failure 500 {string} string "Ошибка при обработке запроса"
+// @Router /api/friends [get]
 func GetFriendsInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Получаем UUID текущего пользователя из контекста
 	userID := r.Context().Value(middleware.UserUUIDKey).(string)
@@ -21,19 +33,19 @@ func GetFriendsInfoHandler(w http.ResponseWriter, r *http.Request) {
 	// Если параметр type не передан, возвращаем все категории
 	if requestType == "" {
 		// Собираем все результаты
-		friends, err := getUserListByType(userID, "friends")
+		friends, err := getFriends(userID)
 		if err != nil {
 			http.Error(w, "Ошибка при получении списка друзей", http.StatusInternalServerError)
 			return
 		}
 
-		incoming, err := getUserListByType(userID, "incoming")
+		incoming, err := getIncomingRequests(userID)
 		if err != nil {
 			http.Error(w, "Ошибка при получении входящих заявок", http.StatusInternalServerError)
 			return
 		}
 
-		outgoing, err := getUserListByType(userID, "outgoing")
+		outgoing, err := getOutgoingRequests(userID)
 		if err != nil {
 			http.Error(w, "Ошибка при получении исходящих заявок", http.StatusInternalServerError)
 			return
@@ -82,8 +94,8 @@ func getUserListByType(userID, requestType string) ([]UserProfile, error) {
 func getFriends(userID string) ([]UserProfile, error) {
 	query := `SELECT u.id, u.login, u.full_name, u.email
 			  FROM users u
-			  JOIN friends f ON (u.id = f.friend_id AND f.user_id = $1 AND f.status = 'accepted') 
-			  OR (u.id = f.user_id AND f.friend_id = $1 AND f.status = 'accepted')`
+			  JOIN friends f ON u.id = f.friend_id
+			  WHERE f.user_id = $1 AND f.status = 'accepted'`
 	rows, err := database.DB.Query(context.Background(), query, userID)
 	if err != nil {
 		log.Println("Ошибка при получении списка друзей:", err)

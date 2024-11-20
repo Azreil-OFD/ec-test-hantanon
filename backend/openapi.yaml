@@ -134,6 +134,68 @@ paths:
                     example: John Doe
         '401':
           description: Токен не предоставлен или неверный
+  /api/friends:
+    get:
+      summary: Получение информации о друзьях, входящих или исходящих заявках.
+      description: |
+        Этот эндпоинт позволяет получить информацию о друзьях, входящих или исходящих заявках на добавление в друзья.
+        Параметр `type` определяет, какие данные будут возвращены. Если параметр не передан, возвращаются все категории.
+        
+        Возможные значения параметра `type`:
+        - `friends`: Список друзей.
+        - `incoming`: Список входящих заявок на добавление в друзья.
+        - `outgoing`: Список исходящих заявок на добавление в друзья.
+      operationId: getFriendsInfo
+      parameters:
+        - name: type
+          in: query
+          description: |
+            Тип данных, которые должны быть возвращены. Возможные значения:
+            - `friends`: Список друзей.
+            - `incoming`: Список входящих заявок на добавление в друзья.
+            - `outgoing`: Список исходящих заявок на добавление в друзья.
+          required: false
+          schema:
+            type: string
+            enum:
+              - friends
+              - incoming
+              - outgoing
+        - name: Authorization
+          in: header
+          description: |
+            Токен авторизации для доступа к данным.
+            Токен должен быть передан в формате `Bearer <token>`.
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwNDczMjMsInV1aWQiOiJjZmI5OGJkNC1hOTIzLTRhY2EtOTc2ZC0xNWIwN2QyZTVjNjMifQ.souhrAZzXtytvU6UFv-dB8hc5upSqPYUL65PEhtcjns"
+      responses:
+        '200':
+          description: Успешный запрос, возвращается список пользователей в формате JSON.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  friends:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+                  incoming:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+                  outgoing:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Неверный параметр запроса.
+        '401':
+          description: Неавторизованный запрос, отсутствует или неверный токен.
+        '500':
+          description: Ошибка сервера при обработке запроса.
   /api/friends/request:
     post:
       summary: Отправить запрос на добавление в друзья

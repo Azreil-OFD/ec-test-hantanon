@@ -9,7 +9,19 @@ import (
 	"strconv"
 )
 
-// Функция для поиска пользователей с пагинацией
+// SearchUserHandler godoc
+// @Summary Поиск пользователей
+// @Description Выполняет поиск пользователей по переданному запросу. Поддерживает пагинацию с параметрами "page" и "limit".
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param query query string true "Строка для поиска"  // Параметр поиска обязательный
+// @Param page query int false "Номер страницы" default(1) // Параметр пагинации, по умолчанию 1
+// @Param limit query int false "Количество пользователей на странице" default(10) // Параметр ограничения по количеству результатов на странице
+// @Success 200 {array} UserProfile "Список пользователей"  // Возвращаем список пользователей
+// @Failure 400 {string} string "Ошибка: Параметр 'query' обязателен"  // Ошибка, если параметр поиска не передан
+// @Failure 500 {string} string "Внутренняя ошибка сервера"  // Ошибка сервера
+// @Router /api/search [get]
 func SearchUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Получаем параметр поиска из запроса
 	searchQuery := r.URL.Query().Get("query")

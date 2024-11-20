@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-// Структура для профиля пользователя
+// UserProfile представляет профиль пользователя
+// @Description Структура для профиля пользователя
 type UserProfile struct {
 	UUID     string `json:"uuid"`
 	Login    string `json:"login"`
@@ -15,7 +16,18 @@ type UserProfile struct {
 	FullName string `json:"full_name"`
 }
 
-// Функция для получения профиля пользователя по UUID
+// GetProfile godoc
+// @Summary Получение профиля пользователя по UUID
+// @Description Возвращает профиль пользователя на основе переданного UUID. Если пользователь не найден, возвращается ошибка 404.
+// @Tags Profile
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param uuid path string true "UUID пользователя"  // Здесь мы ожидаем UUID в пути запроса
+// @Success 200 {object} UserProfile "Профиль пользователя"  // Возвращаем профиль пользователя в ответе
+// @Failure 404 {string} string "Пользователь не найден"  // Ошибка, если пользователь не найден
+// @Failure 500 {string} string "Внутренняя ошибка сервера"  // Ошибка сервера
+// @Router /api/profile/{uuid} [get]
 func GetProfile(w http.ResponseWriter, r *http.Request) {
 	// Извлекаем UUID пользователя из контекста запроса
 	uuid, ok := r.Context().Value(middleware.UserUUIDKey).(string)
