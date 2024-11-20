@@ -1,14 +1,15 @@
 package routs
 
 import (
-	"backend/internal/auth" // Путь до пакета авторизации
-	"backend/internal/friends"
+	"backend/internal/auth"         // Путь до пакета авторизации
+	"backend/internal/friends"      // Путь до пакета с друзьями
 	"backend/internal/middleware"   // Путь до пакета middleware
 	"backend/internal/profile"      // Путь до пакета профиля
 	"backend/internal/registration" // Путь до пакета регистрации
-	"github.com/swaggo/http-swagger"
 	"log"
 	"net/http"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // RegisterRoutes регистрирует все роуты для вашего приложения
@@ -16,21 +17,31 @@ func RegisterRoutes() {
 	// Создаем новый мультиплексор
 	mux := http.NewServeMux()
 
-	// Добавляем все маршруты в мультиплексор
+	// Добавляем все маршруты с Swagger
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
 
-	// Регистрируем обработчики для всех API с отключенным CORS
+	// Регистрируем маршруты без TokenAuthMiddleware (только для регистрации и авторизации)
 	mux.Handle("/api/register", middleware.NoCORSHandler(http.HandlerFunc(registration.RegisterHandler)))
 	mux.Handle("/api/auth", middleware.NoCORSHandler(http.HandlerFunc(auth.LoginHandler)))
 
-	// Используем middleware для проверки JWT и отключения CORS
-	mux.Handle("/api/profile", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(profile.GetProfile))))
-	mux.Handle("/api/friends/request", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(friends.SendFriendRequestHandler))))
-	mux.Handle("/api/friends/accept", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(friends.AcceptFriendRequestHandler))))
-	mux.Handle("/api/friends/decline", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(friends.DeclineFriendRequestHandler))))
-	mux.Handle("/api/friends/remove", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(friends.RemoveFriendRequestHandler))))
-	mux.Handle("/api/friends", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(profile.GetFriendsInfoHandler))))
-	mux.Handle("/api/search", middleware.NoCORSHandler(middleware.TokenAuthMiddleware(http.HandlerFunc(profile.SearchUserHandler))))
+	// Регистрируем маршруты с TokenAuthMiddleware и NoCORSHandler для остальных API
+	routes := []struct {
+		path    string
+		handler http.Handler
+	}{
+		{"/api/profile", http.HandlerFunc(profile.GetProfile)},
+		{"/api/friends/request", http.HandlerFunc(friends.SendFriendRequestHandler)},
+		{"/api/friends/accept", http.HandlerFunc(friends.AcceptFriendRequestHandler)},
+		{"/api/friends/decline", http.HandlerFunc(friends.DeclineFriendRequestHandler)},
+		{"/api/friends/remove", http.HandlerFunc(friends.RemoveFriendRequestHandler)},
+		{"/api/friends", http.HandlerFunc(profile.GetFriendsInfoHandler)},
+		{"/api/search", http.HandlerFunc(profile.SearchUserHandler)},
+	}
+
+	// Применяем TokenAuthMiddleware и NoCORSHandler ко всем остальным маршрутам
+	for _, route := range routes {
+		mux.Handle(route.path, middleware.NoCORSHandler(middleware.TokenAuthMiddleware(route.handler)))
+	}
 
 	// Запускаем сервер с мультиплексором
 	log.Println("Server started on :8000...")
