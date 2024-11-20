@@ -1,20 +1,9 @@
-import Aura from "@primevue/themes/aura";
+// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  ssr: false,
-  compatibilityDate: "2024-04-03",
+  compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  modules: ["@nuxtjs/tailwindcss", "nuxt-primevue"],
-  primevue: {
-    theme: {
-      preset: Aura,
-      options: {
-        cssLayer: {
-          name: "primevue",
-          order: "tailwind-base, primevue, tailwind-utilities",
-        },
-      },
-    },
-  },
-
-
-});
+  mode: 'static',
+  router: {
+      base: '/ec-test-hantanon/'
+   },
+})
