@@ -2,6 +2,7 @@ package registration
 
 import (
 	"backend/internal/database"
+	"backend/internal/model"
 	"backend/internal/util"
 	"context"
 	"encoding/json"
@@ -9,79 +10,100 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type user struct {
+type request struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	FullName string `json:"full_name"`
 }
-// RegisterHandler godoc
-// @Summary Регистрация нового пользователя
-// @Description Регистрация нового пользователя в системе. Требует передачи логина, пароля, email и имени.
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param user body user true "Данные пользователя для регистрации"
-// @Success 201 {string} string "Пользователь успешно зарегистрирован"
-// @Failure 400 {string} string "Неверное тело запроса или отсутствуют обязательные поля"
-// @Failure 409 {string} string "Пользователь с таким логином или email уже существует"
-// @Failure 500 {string} string "Ошибка при хешировании пароля или сохранении пользователя"
-// @Router /api/register [post]
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// Только POST-запросы
+	response := model.Response{}
 	if r.Method != http.MethodPost {
-		http.Error(w, "Неверный метод запроса", http.StatusMethodNotAllowed)
+		response.Message = "Неверный метод запроса"
+		response.Status = http.StatusMethodNotAllowed
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	var user user
-
-	// Декодируем JSON тело запроса
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var request request
+	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, "Неверное тело запроса", http.StatusBadRequest)
+		response.Message = "Неверное тело запроса"
+		response.Status = http.StatusBadRequest
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Простая валидация входных данных
-	if strings.TrimSpace(user.Login) == "" || strings.TrimSpace(user.Password) == "" || strings.TrimSpace(user.Email) == "" || strings.TrimSpace(user.FullName) == "" {
-		http.Error(w, "Логин, пароль, email и имя обязательны", http.StatusBadRequest)
+	if strings.TrimSpace(request.Login) == "" || strings.TrimSpace(request.Password) == "" || strings.TrimSpace(request.Email) == "" || strings.TrimSpace(request.FullName) == "" {
+		response.Message = "Логин, пароль, email и имя обязательны"
+		response.Status = http.StatusBadRequest
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Здесь можно добавить дополнительные проверки (например, проверка на уникальность логина или email)
-
-	// Хешируем пароль перед сохранением в базу данных (рекомендуется использовать более безопасные хеш-функции, например bcrypt)
-	user.Password, err = util.HashPassword(user.Password)
+	request.Password, err = util.HashPassword(request.Password)
 	if err != nil {
-		http.Error(w, "Ошибка при хешировании пароля", http.StatusInternalServerError)
+		response.Message = "Ошибка при хешировании пароля"
+		response.Status = http.StatusInternalServerError
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Добавляем пользователя в базу данных
-	err = saveUserToDB(user)
+	err = saveUserToDB(request)
 	if err != nil {
-		http.Error(w, "Такой пользователь уже существует", http.StatusConflict)
+		if customErr, ok := err.(*model.CustomError); ok {
+			if customErr.Code == model.ConflictError {
+				response.Status = http.StatusConflict
+			} else if customErr.Code == model.DBError {
+				response.Status = http.StatusInternalServerError
+			}
+			response.Message = customErr.Message
+		}
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Отправляем успешный ответ
-	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "Пользователь %s успешно зарегистрирован!", user.Login)
+	response.Message = fmt.Sprintf("Пользователь %s успешно зарегистрирован!", request.Login)
+	response.Status = http.StatusCreated
+	model.SendJSONResponse(w, response)
 }
 
-// Функция для сохранения пользователя в базе данных
-func saveUserToDB(user user) error {
-	// Пример запроса для вставки пользователя
+func saveUserToDB(user request) error {
 	query := `INSERT INTO users (login, password, email, full_name) VALUES ($1, $2, $3, $4)`
 	_, err := database.DB.Exec(context.Background(), query, user.Login, user.Password, user.Email, user.FullName)
 	if err != nil {
-		// Логируем ошибку на русском
+		if pgErr, ok := err.(*pgconn.PgError); ok {
+			if pgErr.Code == "23505" {
+				if strings.Contains(pgErr.Message, "login") {
+					err = &model.CustomError{
+						Message: "Логин уже существует",
+						Code:    model.ConflictError,
+					}
+				} else if strings.Contains(pgErr.Message, "email") {
+					err = &model.CustomError{
+						Message: "Email уже существует",
+						Code:    model.ConflictError,
+					}
+				} else {
+					log.Printf("ВАЖНОЕ!!! ошибка: %v\nLogin: %s\nPassword: %s\nEmail: %s\nFullName: %s", err, user.Login, user.Password, user.Email, user.FullName)
+					err = &model.CustomError{
+						Message: "Кто ты, воин?",
+						Code:    model.ConflictError,
+					}
+				}
+				return err
+			}
+		}
 		log.Println("Ошибка при вставке пользователя в базу данных:", err)
-		return err
+		return &model.CustomError{
+			Message: "Ошибка на стороне сервера",
+			Code:    model.DBError,
+		}
 	}
-
 	return nil
 }

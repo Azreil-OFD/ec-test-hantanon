@@ -1,92 +1,63 @@
 package auth
 
 import (
-	"backend/internal/database"
+	"backend/internal/model"
+	"backend/internal/service"
 	"backend/internal/util"
-	"context"
 	"encoding/json"
-	"errors"
-	"log"
+	"fmt"
 	"net/http"
 )
 
-// Структура для хранения данных пользователя, получаемых из запроса
-type user struct {
-	uuid     string
-	Login    string `json:"login"`    // Логин пользователя
-	Password string `json:"password"` // Пароль пользователя
+type request struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
 }
 
-// LoginHandler godoc
-// @Summary Авторизация пользователя
-// @Description Проверяет логин и пароль пользователя, генерирует JWT токен при успешной авторизации.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param login body user true "Данные для авторизации" 
-// @Success 200 {object} map[string]string {"token": "JWT токен"}
-// @Failure 400 {string} string "Неверное тело запроса"
-// @Failure 401 {string} string "Неверный логин или пароль"
-// @Failure 500 {string} string "Ошибка генерации токена"
-// @Router /api/auth [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Получаем данные из тела запроса (login и password)
-	var user user
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		// Если не удается распарсить JSON из запроса, возвращаем ошибку
-		http.Error(w, "Неверное тело запроса", http.StatusBadRequest) // Русский текст ошибки
+	var request request
+	response := model.Response{}
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		response.Message = "Неверное тело запроса"
+		response.Status = http.StatusBadRequest
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Проверяем, существует ли пользователь с данным логином в базе данных
-	dbUser, err := getUserByLogin(user.Login)
+	user, err := service.GetUserByLogin(request.Login)
 	if err != nil {
-		// Если пользователь не найден или произошла ошибка, возвращаем ошибку авторизации
-		http.Error(w, "Неверный логин или пароль", http.StatusUnauthorized) // Русский текст ошибки
-		return
-	}
-
-	// Сравниваем хешированный пароль, который хранится в базе данных, с паролем, введенным пользователем
-	if !util.ComparePassword(dbUser.Password, user.Password) {
-		// Если пароли не совпадают, возвращаем ошибку авторизации
-		http.Error(w, "Неверный логин или пароль", http.StatusUnauthorized) // Русский текст ошибки
-		return
-	}
-
-	// Если авторизация прошла успешно, генерируем JWT токен для дальнейшей аутентификации
-	token, err := util.GenerateJWT(dbUser.uuid)
-	if err != nil {
-		// Если не удается сгенерировать токен, возвращаем ошибку
-		http.Error(w, "Ошибка генерации токена", http.StatusInternalServerError) // Русский текст ошибки
-		return
-	}
-
-	// Отправляем токен обратно пользователю в формате JSON
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"token": token, // Возвращаем JWT токен
-	})
-}
-
-// Функция для получения пользователя из базы данных по логину
-func getUserByLogin(login string) (*user, error) {
-	// SQL запрос для получения данных пользователя по логину
-	query := `SELECT id, login, password FROM users WHERE login = $1`
-	row := database.DB.QueryRow(context.Background(), query, login)
-
-	// Создаем объект User для хранения полученных данных
-	var user user
-	err := row.Scan(&user.uuid, &user.Login, &user.Password)
-	if err != nil {
-		// Если пользователь не найден в базе данных
-		if err.Error() == "sql: no rows in result set" {
-			return nil, errors.New("пользователь не найден") // Возвращаем ошибку, что пользователь не найден
+		if customErr, ok := err.(*model.CustomError); ok {
+			if customErr.Code == model.NotFound {
+				response.Message = "Неверный логин или пароль"
+				response.Status = http.StatusNotFound
+			} else if customErr.Code == model.DBError {
+				response.Message = customErr.Message
+				response.Status = http.StatusInternalServerError
+			}
 		}
-		// Если произошла ошибка при выполнении запроса
-		log.Println("Ошибка при получении пользователя из базы данных:", err)
-		return nil, err
+		model.SendJSONResponse(w, response)
+		return
 	}
-	// Если пользователь найден, возвращаем данные
-	return &user, nil
+
+	if !util.ComparePassword(user.PasswordHash, request.Password) {
+		response.Message = "Неверный логин или пароль"
+		response.Status = http.StatusNotFound
+		model.SendJSONResponse(w, response)
+		return
+	}
+
+	token, err := util.GenerateJWT(user.UUID)
+	if err != nil {
+		response.Message = "Ошибка генерации токена"
+		response.Status = http.StatusInternalServerError
+		model.SendJSONResponse(w, response)
+		return
+	}
+
+	response.Message = fmt.Sprintf("Пользователь %s успешно авторизовался!", user.Login)
+	response.Status = http.StatusOK
+	response.Data = map[string]string{
+		"token": token,
+	}
+	model.SendJSONResponse(w, response)
 }

@@ -2,7 +2,6 @@ package util
 
 import (
 	"errors"
-	"log"
 	"os"
 	"time"
 
@@ -22,10 +21,8 @@ func HashPassword(password string) (string, error) {
 
 // ComparePassword проверяет, совпадает ли введённый пароль с сохранённым хешем
 func ComparePassword(storedHash, password string) bool {
-	// Сравниваем пароль с хешем
 	err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(password))
 	if err != nil {
-		log.Println("Ошибка сравнения паролей:", err)
 		return false
 	}
 	return true
