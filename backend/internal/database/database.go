@@ -20,7 +20,6 @@ func init() {
 	user := os.Getenv("POSTGRESQL_USER")
 	password := os.Getenv("POSTGRESQL_PASSWORD")
 	dbname := os.Getenv("POSTGRESQL_NAME")
-
 	// Создаем строку подключения
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s",
 		user, password, host, port, dbname)
