@@ -60,3 +60,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	model.SendJSONResponse(w, response)
 }
+
+
+func TestHandler(w http.ResponseWriter, r *http.Request) {
+	model.SendJSONResponse(w, model.Response{
+		Message: "тест",
+		Status: 200,
+	})
+}

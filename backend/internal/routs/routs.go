@@ -19,7 +19,7 @@ func RegisterRoutes() {
 
 	// Добавляем все маршруты с Swagger
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)
-
+	mux.Handle("/api/test", middleware.NoCORSHandler(http.HandlerFunc(auth.TestHandler)))
 	// Регистрируем маршруты без TokenAuthMiddleware (только для регистрации и авторизации)
 	mux.Handle("/api/register", middleware.NoCORSHandler(http.HandlerFunc(registration.RegisterHandler)))
 	mux.Handle("/api/auth", middleware.NoCORSHandler(http.HandlerFunc(auth.LoginHandler)))
