@@ -12,14 +12,6 @@ type contextKey string
 
 const UserUUIDKey contextKey = "userUUID"
 
-// TokenAuthMiddleware godoc
-// @Summary Проверка JWT токена
-// @Description Проверка JWT токена в заголовках запроса. Токен должен быть передан в формате `Bearer <token>`.
-// @Tags Middleware
-// @Accept json
-// @Produce json
-// @Failure 401 {string} string "Токен не предоставлен или неверный токен"
-// @Router /api/* [all]
 func TokenAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Получаем JWT токен из заголовков запроса

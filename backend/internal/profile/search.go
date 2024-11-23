@@ -2,31 +2,20 @@ package profile
 
 import (
 	"backend/internal/database"
+	"backend/internal/model"
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 )
 
-// SearchUserHandler godoc
-// @Summary Поиск пользователей
-// @Description Выполняет поиск пользователей по переданному запросу. Поддерживает пагинацию с параметрами "page" и "limit".
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Param query query string true "Строка для поиска"  // Параметр поиска обязательный
-// @Param page query int false "Номер страницы" default(1) // Параметр пагинации, по умолчанию 1
-// @Param limit query int false "Количество пользователей на странице" default(10) // Параметр ограничения по количеству результатов на странице
-// @Success 200 {array} UserProfile "Список пользователей"  // Возвращаем список пользователей
-// @Failure 400 {string} string "Ошибка: Параметр 'query' обязателен"  // Ошибка, если параметр поиска не передан
-// @Failure 500 {string} string "Внутренняя ошибка сервера"  // Ошибка сервера
-// @Router /api/search [get]
 func SearchUserHandler(w http.ResponseWriter, r *http.Request) {
-	// Получаем параметр поиска из запроса
+	response := model.Response{}
 	searchQuery := r.URL.Query().Get("query")
 	if searchQuery == "" {
-		http.Error(w, "Параметр запроса 'query' обязателен", http.StatusBadRequest)
+		response.Message = "Параметр запроса 'query' обязателен"
+		response.Status = model.BadRequest
+		model.SendJSONResponse(w, response)
 		return
 	}
 
@@ -40,21 +29,52 @@ func SearchUserHandler(w http.ResponseWriter, r *http.Request) {
 		limit = 10 // По умолчанию 10 результатов на странице
 	}
 
-	users, err := searchUsers(searchQuery, page, limit)
-
+	users, totalPages, err := searchUsers(searchQuery, page, limit)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		customErr, _ := err.(*model.CustomError)
+		response.Status = customErr.Code
+		response.Message = customErr.Message
+		model.SendJSONResponse(w, response)
 		return
 	}
 
-	// Отправляем найденных пользователей в ответ
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(users)
+	response.Message = "Запрос на поиск прошел успешно!"
+	response.Status = http.StatusOK
+	response.Data = struct {
+		MetaData struct {
+			CurentLimit int `json:"curent_limit"`
+			TotalPages  int `json:"total_pages"`
+		} `json:"metadata"`
+		Data interface{} `json:"data"`
+	}{
+		MetaData: struct {
+			CurentLimit int `json:"curent_limit"`
+			TotalPages  int `json:"total_pages"`
+		}{
+			CurentLimit: len(users),
+			TotalPages:  totalPages,
+		},
+		Data: users,
+	}
+	model.SendJSONResponse(w, response)
 }
 
 // Функция для поиска пользователей по имени (часть имени)
-func searchUsers(query string, page, limit int) ([]UserProfile, error) {
+func searchUsers(query string, page, limit int) ([]model.User, int, error) {
+	// Подсчитываем общее количество пользователей, удовлетворяющих запросу
+	var totalCount int
+	countQuery := `SELECT COUNT(*) 
+				   FROM users 
+				   WHERE login ILIKE $1 OR full_name ILIKE $2`
+	err := database.DB.QueryRow(context.Background(), countQuery, "%"+query+"%", "%"+query+"%").Scan(&totalCount)
+	if err != nil {
+		log.Println("Ошибка: ", err)
+		return nil, 0, &model.CustomError{
+			Code:    model.DBError,
+			Message: "Ошибка на стороне сервера",
+		}
+	}
+
 	offset := (page - 1) * limit
 	// Выполняем поиск как по логину, так и по полному имени
 	queryString := `SELECT id, login, full_name, email 
@@ -63,29 +83,38 @@ func searchUsers(query string, page, limit int) ([]UserProfile, error) {
 					ORDER BY full_name, login 
 					LIMIT $3 OFFSET $4`
 	rows, err := database.DB.Query(context.Background(), queryString, "%"+query+"%", "%"+query+"%", limit, offset)
-
 	if err != nil {
-		log.Println("Ошибка при поиске пользователя:", err)
-		return nil, err
+		log.Println("Ошибка: ", err)
+		return nil, 0, &model.CustomError{
+			Code:    model.DBError,
+			Message: "Ошибка на стороне сервера",
+		}
 	}
 	defer rows.Close()
 
-	// Обрабатываем результаты запроса
-	users := []UserProfile{}
+	users := []model.User{}
 	for rows.Next() {
-		var user UserProfile
+		var user model.User
 		if err := rows.Scan(&user.UUID, &user.Login, &user.FullName, &user.Email); err != nil {
-			log.Println("Ошибка при сканировании данных:", err)
-			return nil, err
+			log.Println("Ошибка: ", err)
+			return nil, 0, &model.CustomError{
+				Code:    model.DBError,
+				Message: "Ошибка на стороне сервера",
+			}
 		}
 		users = append(users, user)
 	}
 
-	// Обрабатываем возможные ошибки после перебора строк
 	if err := rows.Err(); err != nil {
-		log.Println("Ошибка при обработке строк:", err)
-		return nil, err
+		log.Println("Ошибка: ", err)
+		return nil, 0, &model.CustomError{
+			Code:    model.DBError,
+			Message: "Ошибка на стороне сервера",
+		}
 	}
 
-	return users, nil
+	// Рассчитываем общее количество страниц
+	totalPages := (totalCount + limit - 1) / limit // Это дает количество страниц с округлением в большую сторону
+
+	return users, totalPages, nil
 }

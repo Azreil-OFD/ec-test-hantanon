@@ -45,7 +45,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		model.SendJSONResponse(w, response)
 		return
 	}
-
 	token, err := util.GenerateJWT(user.UUID)
 	if err != nil {
 		response.Message = "Ошибка генерации токена"
