@@ -33,3 +33,6 @@ curl -X GET "http://localhost:8000/api/friends?incoming" \
 -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwNDczMjMsInV1aWQiOiJjZmI5OGJkNC1hOTIzLTRhY2EtOTc2ZC0xNWIwN2QyZTVjNjMifQ.souhrAZzXtytvU6UFv-dB8hc5upSqPYUL65PEhtcjns"
 
 curl -X GET "http://localhost:8000/api/friends?type=outgoing" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIwNDczMjMsInV1aWQiOiJjZmI5OGJkNC1hOTIzLTRhY2EtOTc2ZC0xNWIwN2QyZTVjNjMifQ.souhrAZzXtytvU6UFv-dB8hc5upSqPYUL65PEhtcjns"
+
+
+curl -X GET "http://localhost:8000/api/search?query=somequery&page=1&limit=10" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIyOTg3MDksInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.M1sfSBbTmRZKXbCFJKaBLbP7ucPU6P2EnYX6V4pxniw"

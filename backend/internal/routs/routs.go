@@ -34,7 +34,7 @@ func RegisterRoutes() {
 		{"/api/friends/accept", http.HandlerFunc(friends.AcceptFriendRequestHandler)},
 		{"/api/friends/decline", http.HandlerFunc(friends.DeclineFriendRequestHandler)},
 		{"/api/friends/remove", http.HandlerFunc(friends.RemoveFriendRequestHandler)},
-		{"/api/friends", http.HandlerFunc(profile.GetFriendsInfoHandler)},
+		{"/api/friends", http.HandlerFunc(friends.GetFriendsInfoHandler)},
 		{"/api/search", http.HandlerFunc(profile.SearchUserHandler)},
 	}
 

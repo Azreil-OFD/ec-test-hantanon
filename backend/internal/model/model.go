@@ -12,6 +12,14 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+type User struct {
+	UUID         string `json:"uuid"`
+	FullName     string `json:"full_name"`
+	Login        string `json:"login"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"-"`
+}
+
 func SendJSONResponse(w http.ResponseWriter, r Response) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(r.Status)
@@ -21,9 +29,10 @@ func SendJSONResponse(w http.ResponseWriter, r Response) {
 }
 
 const (
-	DBError       = 0
-	ConflictError = 1
-	NotFound      = 2
+	DBError       = 500
+	ConflictError = 409
+	NotFound      = 404
+	BadRequest    = 400
 )
 
 type CustomError struct {
