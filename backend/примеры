@@ -36,3 +36,7 @@ curl -X GET "http://localhost:8000/api/friends?type=outgoing" -H "Authorization:
 
 
 curl -X GET "http://localhost:8000/api/search?query=somequery&page=1&limit=10" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzIyOTg3MDksInV1aWQiOiI4ZDRlNDY0Yi1hNDhlLTQ5YjEtYWZkNC0zZmMzOTg1NTFjOWQifQ.M1sfSBbTmRZKXbCFJKaBLbP7ucPU6P2EnYX6V4pxniw"
+
+websocat -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzI0NTA0NzksInV1aWQiOiJjZTQ1NjZlMC1hZjhjLTRkMjktYjNjNC02ZTI0NDdhNjQ3ODEifQ.HgUaeR0RxTco_jzd5qKH8H-PmG4ZJqP3Mc_1fWwDGh0" ws://localhost:8000/api/signal
+
+websocat.x86_64-unknown-linux-musl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MzI0NTA0NzksInV1aWQiOiJjZTQ1NjZlMC1hZjhjLTRkMjktYjNjNC02ZTI0NDdhNjQ3ODEifQ.HgUaeR0RxTco_jzd5qKH8H-PmG4ZJqP3Mc_1fWwDGh0" ws://localhost:8000/api/signal

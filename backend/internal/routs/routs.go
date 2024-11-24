@@ -6,6 +6,7 @@ import (
 	"backend/internal/middleware"   // Путь до пакета middleware
 	"backend/internal/profile"      // Путь до пакета профиля
 	"backend/internal/registration" // Путь до пакета регистрации
+	webrtc "backend/internal/webRtc"
 	"log"
 	"net/http"
 
@@ -23,7 +24,7 @@ func RegisterRoutes() {
 	// Регистрируем маршруты без TokenAuthMiddleware (только для регистрации и авторизации)
 	mux.Handle("/api/register", middleware.NoCORSHandler(http.HandlerFunc(registration.RegisterHandler)))
 	mux.Handle("/api/auth", middleware.NoCORSHandler(http.HandlerFunc(auth.LoginHandler)))
-
+	// mux.Handle("/api/signal", http.HandlerFunc(webrtc.SignalHandler))
 	// Регистрируем маршруты с TokenAuthMiddleware и NoCORSHandler для остальных API
 	routes := []struct {
 		path    string
@@ -36,6 +37,7 @@ func RegisterRoutes() {
 		{"/api/friends/remove", http.HandlerFunc(friends.RemoveFriendRequestHandler)},
 		{"/api/friends", http.HandlerFunc(friends.GetFriendsInfoHandler)},
 		{"/api/search", http.HandlerFunc(profile.SearchUserHandler)},
+		{"/api/signal", http.HandlerFunc(webrtc.SignalHandler)},
 	}
 
 	// Применяем TokenAuthMiddleware и NoCORSHandler ко всем остальным маршрутам
