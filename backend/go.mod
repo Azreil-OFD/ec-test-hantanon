@@ -4,10 +4,10 @@ go 1.22.7
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/gorilla/websocket v1.5.3
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/lib/pq v1.10.9
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.16.4
 	golang.org/x/crypto v0.29.0
 )
 
@@ -26,6 +26,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rogpeppe/go-internal v1.13.1 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
+	github.com/swaggo/swag v1.16.4 // indirect
 	golang.org/x/net v0.31.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
